@@ -1,0 +1,61 @@
+#!/bin/bash
+
+clear
+
+echo "**MAC Address Randomizer**"
+echo "--------------------------"
+read -p "Press return to begin."
+
+#---------------------------------
+
+for i in {0..9}
+do
+   {
+   if [[ "$(ifconfig en$i | grep 'inet ')" != "" ]]
+   then
+      ARR+="en$i"
+   fi
+   } &> /dev/null
+done
+echo
+
+for i in "${ARR[@]}"
+do
+
+   unset macdelta
+
+   macdelta=$(ifconfig $i | grep "ether" | sed 's/ether //g' | sed 's/ //g')
+   macdelta+=" => "
+
+   POOL=(0 1 2 3 4 5 6 7 8 9 a b c d e f)
+
+   unset mac
+
+   c=1
+   while [[ "$c" -le 6 ]]
+   do
+      pair=$(echo "${POOL[$(echo $RANDOM %16)]}")
+      pair+=$(echo "${POOL[$(echo $RANDOM %16)]}")
+
+      if [[ "$c" -le 5 ]]
+      then
+         pair+=":"
+      fi
+
+      mac+=$pair
+
+      let "c++"
+   done
+
+   sudo ifconfig $i ether $mac
+
+   macdelta+=$(ifconfig $i | grep "ether" | sed 's/ether //g')
+
+   echo "($i)"
+   echo $macdelta
+
+done
+
+echo
+read -p "Press return to exit."
+clear
